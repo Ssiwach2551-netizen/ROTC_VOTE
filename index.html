@@ -3,194 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบคัดเลือกหัวหน้านักศึกษาวิชาทหาร</title>
+    <title>ระบบรับสมัครหัวหน้า นศท. </title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Sarabun', sans-serif; background-color: #f3f4f6; }
-        .nav-active { border-bottom: 3px solid #d97706; color: #d97706; font-weight: 600; }
+        body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; }
+        .nav-active { border-bottom: 3px solid #166534; color: #166534; font-weight: bold; }
+        
+        /* Loading Overlay */
+        #loading-overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 1000; align-items: center; justify-content: center; flex-direction: column; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #166534; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Toast Message */
+        #toast { position: fixed; bottom: 20px; right: -300px; transition: right 0.4s ease-in-out; z-index: 1050; }
+
         @media print {
-            .no-print { display: none !important; }
-            .print-only { display: block !important; }
-            body { background: white; }
-            .print-container { border: 1px solid #000; padding: 20px; }
+            body * { visibility: hidden; }
+            #printArea, #printArea * { visibility: visible; }
+            #printArea { position: absolute; left: 0; top: 0; width: 100%; }
         }
     </style>
 </head>
 <body class="text-gray-800">
 
-    <!-- Header -->
-    <header class="bg-[#1a3622] text-white shadow-md no-print">
+    <!-- Loading Overlay -->
+    <div id="loading-overlay">
+        <div class="spinner mb-3"></div>
+        <p class="text-green-800 font-bold">กำลังประมวลผลข้อมูล...</p>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="bg-gray-800 text-white px-6 py-3 rounded shadow-lg border-l-4"></div>
+
+    <header class="bg-[#164e63] text-white shadow-md">
         <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center text-xl font-bold">นศท.</div>
+                <!-- Logo SVG -->
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-yellow-400"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                 <div>
-                    <h1 class="text-xl font-bold text-yellow-500">ระบบรับสมัครและคัดเลือกหัวหน้า นศท.</h1>
-                    <p class="text-sm text-gray-300">ประจำปีการศึกษา 2567</p>
+                    <h1 class="text-xl font-bold text-yellow-400">ระบบคัดเลือกหัวหน้า นศท.</h1>
+                    <p class="text-sm text-gray-200">เปิดรับสมัครเฉพาะ นศท. ชั้นปีที่ 2</p>
                 </div>
             </div>
-            <button onclick="showAdminPrompt()" class="mt-4 md:mt-0 text-sm text-gray-300 hover:text-white">สำหรับผู้ดูแลระบบ</button>
+            <button onclick="showAdminPrompt()" class="mt-4 md:mt-0 text-sm text-gray-300 hover:text-white underline">เข้าสู่ระบบผู้ดูแล</button>
         </div>
     </header>
 
-    <!-- Navigation -->
-    <nav class="bg-white shadow-sm mb-6 no-print">
+    <nav class="bg-white shadow-sm mb-6 sticky top-0 z-50">
         <div class="max-w-6xl mx-auto px-4 flex overflow-x-auto">
-            <button onclick="switchTab('info')" id="tab-info" class="nav-active px-6 py-3 whitespace-nowrap">ระเบียบการ</button>
-            <button onclick="switchTab('apply')" id="tab-apply" class="px-6 py-3 whitespace-nowrap text-gray-500 hover:text-green-800">กรอกใบสมัคร</button>
-            <button onclick="switchTab('status')" id="tab-status" class="px-6 py-3 whitespace-nowrap text-gray-500 hover:text-green-800">ประกาศผลและจัดอันดับ</button>
+            <button onclick="switchTab('info')" id="tab-info" class="nav-active px-6 py-4 whitespace-nowrap transition">ระเบียบการ</button>
+            <button onclick="switchTab('apply')" id="tab-apply" class="px-6 py-4 whitespace-nowrap text-gray-500 hover:text-green-800 transition">สมัครเป็นผู้นำ</button>
+            <button onclick="switchTab('vote')" id="tab-vote" class="px-6 py-4 whitespace-nowrap text-gray-500 hover:text-green-800 transition">ลงคะแนนโหวต</button>
+            <button onclick="switchTab('status')" id="tab-status" class="px-6 py-4 whitespace-nowrap text-gray-500 hover:text-green-800 transition">ประกาศผล</button>
         </div>
     </nav>
 
-    <!-- Main Content -->
     <main class="max-w-6xl mx-auto px-4 pb-12">
         
-        <!-- View 1: Info -->
-        <div id="view-info" class="bg-white rounded-lg shadow-sm p-6 md:p-8">
-            <h2 class="text-2xl font-bold text-green-800 mb-6 border-l-4 border-yellow-500 pl-4">ระเบียบการคัดเลือก</h2>
+        <!-- View: Info -->
+        <div id="view-info" class="bg-white rounded-xl shadow-sm p-6 md:p-10 border border-gray-100">
+            <h2 class="text-2xl font-bold text-[#164e63] mb-6 border-l-4 border-yellow-500 pl-4">ระเบียบการคัดเลือกหัวหน้า (ชั้นปีที่ 2)</h2>
             <div class="grid md:grid-cols-2 gap-8">
                 <div>
-                    <h3 class="font-bold text-lg mb-2">1. คุณสมบัติผู้สมัคร</h3>
-                    <ul class="list-disc pl-5 space-y-2 text-gray-600 mb-6">
-                        <li>เป็น นศท. ชั้นปีที่ 2 หรือ 3 ของสถานศึกษา</li>
-                        <li>ไม่มีประวัติผิดระเบียบวินัยร้ายแรง</li>
-                        <li>มีความเป็นผู้นำ กล้าตัดสินใจ และมีภาวะผู้นำสูง</li>
-                    </ul>
-                    <h3 class="font-bold text-lg mb-2">2. หน้าที่ความรับผิดชอบ</h3>
-                    <ul class="list-disc pl-5 space-y-2 text-gray-600">
-                        <li>ประสานงานระหว่างผู้กำกับ นศท. กับนักเรียน</li>
-                        <li>ควบคุมแถว ดูแลความเรียบร้อยในวันฝึก</li>
-                        <li>ดูแลการเช็คชื่อและงานเอกสารของกองร้อย</li>
-                    </ul>
+                    <h3 class="font-bold text-lg mb-2 text-gray-800">ขั้นตอนการสมัคร</h3>
+                    <ol class="list-decimal pl-5 space-y-2 text-gray-600 mb-6">
+                        <li>กรอกรหัสประจำตัวในเมนู <span class="font-bold text-green-700">"สมัครเป็นผู้นำ"</span> (ระบบจะดึงข้อมูลรูปและชื่ออัตโนมัติ)</li>
+                        <li>กรอกวิสัยทัศน์และประสบการณ์ เพื่อให้ผู้ดูแลระบบคัดกรองเบื้องต้น</li>
+                        <li>เพื่อนๆ นศท. จะเข้ามาลงคะแนนโหวตในเมนู "ลงคะแนนโหวต" (โหวตได้คนละ 1 ครั้ง)</li>
+                    </ol>
                 </div>
-                <div class="bg-gray-50 p-6 rounded-lg border">
-                    <h3 class="font-bold text-lg mb-4">กระบวนการและเกณฑ์การให้คะแนน (100 คะแนน)</h3>
+                <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                    <h3 class="font-bold text-lg mb-4">เกณฑ์การให้คะแนน (100 คะแนน)</h3>
                     <ul class="space-y-3">
-                        <li class="flex justify-between items-center pb-2 border-b">
-                            <span><b>รอบที่ 1:</b> คัดกรองคุณสมบัติจากใบสมัคร</span>
-                            <span class="text-gray-500 font-bold">ผ่าน/ไม่ผ่าน</span>
-                        </li>
-                        <li class="flex justify-between items-center pb-2 border-b">
-                            <span><b>รอบที่ 2:</b> ปฏิบัติการสั่งแถว/บุคคลท่ามือเปล่า</span>
-                            <span class="text-green-700 font-bold">40 คะแนน</span>
-                        </li>
-                        <li class="flex justify-between items-center pb-2 border-b">
-                            <span><b>รอบที่ 2:</b> สอบสัมภาษณ์ไหวพริบ</span>
-                            <span class="text-green-700 font-bold">20 คะแนน</span>
-                        </li>
-                        <li class="flex justify-between items-center pb-2 border-b">
-                            <span><b>รอบที่ 3:</b> คะแนนโหวตจากเพื่อน นศท.</span>
-                            <span class="text-green-700 font-bold">40 คะแนน</span>
-                        </li>
+                        <li class="flex justify-between border-b pb-2"><span>1. คัดกรองคุณสมบัติ</span> <span class="text-gray-500">ผ่าน/ไม่ผ่าน</span></li>
+                        <li class="flex justify-between border-b pb-2"><span>2. สอบปฏิบัติสั่งแถว</span> <span class="font-bold text-[#164e63]">40 คะแนน</span></li>
+                        <li class="flex justify-between border-b pb-2"><span>3. สอบสัมภาษณ์</span> <span class="font-bold text-[#164e63]">20 คะแนน</span></li>
+                        <li class="flex justify-between border-b pb-2"><span>4. คะแนนโหวตมวลชน</span> <span class="font-bold text-[#164e63]">40 คะแนน</span></li>
                     </ul>
-                    <p class="text-sm text-red-600 mt-4">* ผู้ผ่านการคัดเลือกจะต้องผ่านช่วงทดลองงาน 2 สัปดาห์แรกของการฝึก ก่อนแต่งตั้งถาวร</p>
                 </div>
             </div>
             <div class="mt-8 text-center">
-                <button onclick="switchTab('apply')" class="bg-green-700 hover:bg-green-800 text-white px-8 py-3 rounded shadow font-bold text-lg transition">รับทราบระเบียบการ และเข้าสู่ระบบรับสมัคร</button>
+                <button onclick="switchTab('apply')" class="bg-[#164e63] hover:bg-[#083344] text-white px-8 py-3 rounded-md shadow-md font-bold text-lg transition">รับทราบ เข้าสู่หน้าสมัคร</button>
             </div>
         </div>
 
-        <!-- View 2: Apply Form -->
-        <div id="view-apply" class="hidden">
-            <div class="bg-white rounded-lg shadow-sm p-6 md:p-8 max-w-3xl mx-auto">
-                <h2 class="text-2xl font-bold text-green-800 mb-6 text-center">แบบฟอร์มสมัครหัวหน้า นศท.</h2>
-                <form id="applyForm" onsubmit="submitForm(event)">
-                    <div class="grid md:grid-cols-2 gap-4 mb-4">
+        <!-- View: Apply -->
+        <div id="view-apply" class="hidden max-w-3xl mx-auto">
+            <div class="bg-white rounded-xl shadow-sm p-6 md:p-10 border border-gray-100">
+                <h2 class="text-2xl font-bold text-center mb-6 text-[#164e63]">แบบฟอร์มสมัคร (เฉพาะปี 2)</h2>
+                
+                <!-- ค้นหานักเรียน -->
+                <div class="flex gap-2 mb-6">
+                    <input type="text" id="findStudentId" placeholder="กรอกรหัสประจำตัวนักเรียน 5 หลัก..." class="flex-1 border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-[#164e63] outline-none">
+                    <button type="button" onclick="fetchStudentForApply()" class="bg-gray-800 text-white px-6 rounded-md hover:bg-gray-900 font-bold transition">ดึงข้อมูล</button>
+                </div>
+
+                <form id="applyForm" onsubmit="submitApplication(event)" class="hidden space-y-6">
+                    <div class="flex flex-col md:flex-row items-center gap-6 p-4 bg-slate-50 rounded-lg border">
+                        <img id="displayPhoto" src="" class="w-24 h-32 object-cover rounded shadow border bg-white" alt="Photo">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อ - นามสกุล</label>
-                            <input type="text" id="fname" required class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-green-500 focus:border-green-500">
+                            <p class="text-sm text-gray-500">ข้อมูลจากฐานข้อมูล</p>
+                            <h3 class="text-xl font-bold" id="displayName">-</h3>
+                            <p class="text-gray-600">รหัส: <span id="displayId"></span> | ชั้นปีที่ 2</p>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">รหัสประจำตัวนักเรียน</label>
-                            <input type="text" id="fstudentId" required class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-green-500 focus:border-green-500">
-                        </div>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ชั้นปี นศท.</label>
-                        <select id="fyear" required class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-green-500 focus:border-green-500">
-                            <option value="">-- เลือกชั้นปี --</option>
-                            <option value="ปี 2">ปี 2</option>
-                            <option value="ปี 3">ปี 3</option>
-                        </select>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">รูปถ่ายหน้าตรง (สำหรับติดบัตร)</label>
-                        <input type="file" id="fphoto" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ประสบการณ์ (เช่น หัวหน้าห้อง, ประธานสี)</label>
-                        <textarea id="fexp" rows="2" required class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-green-500 focus:border-green-500"></textarea>
-                    </div>
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">เหตุผลที่สมัคร และวิธีรับมือหากเพื่อนไม่ฟังคำสั่ง?</label>
-                        <textarea id="fvision" rows="3" required class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-green-500 focus:border-green-500"></textarea>
                     </div>
                     
-                    <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-md mb-6">
-                        <label class="flex items-start">
-                            <input type="checkbox" required class="mt-1 mr-3 h-5 w-5 text-green-600 rounded">
-                            <span class="text-sm text-gray-700">ข้าพเจ้าขอยืนยันว่าข้อมูลข้างต้นเป็นความจริงทุกประการ ข้าพเจ้าพร้อมสละเวลาเพื่อส่วนรวมและยอมรับกฎระเบียบรวมถึงผลการคัดเลือกของคณะกรรมการถือเป็นที่สิ้นสุด</span>
-                        </label>
+                    <div>
+                        <label class="block font-medium mb-1">ประสบการณ์การเป็นผู้นำ <span class="text-red-500">*</span></label>
+                        <textarea id="fexp" rows="2" required class="w-full border rounded-md p-3" placeholder="เช่น เคยเป็นหัวหน้าห้อง, สภานักเรียน..."></textarea>
                     </div>
-
-                    <button type="submit" id="submitBtn" class="w-full bg-green-700 hover:bg-green-800 text-white py-3 px-4 rounded-md font-bold text-lg shadow-md transition">
-                        ยื่นใบสมัคร
-                    </button>
+                    <div>
+                        <label class="block font-medium mb-1">วิสัยทัศน์ และวิธีจัดการเพื่อนที่ไม่เชื่อฟัง <span class="text-red-500">*</span></label>
+                        <textarea id="fvision" rows="3" required class="w-full border rounded-md p-3" placeholder="อธิบายแนวคิดของคุณ..."></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-green-700 hover:bg-green-800 text-white py-3 rounded-md font-bold text-lg shadow-md transition">ยืนยันการยื่นใบสมัคร</button>
                 </form>
             </div>
         </div>
 
-        <!-- View 3: Status & Ranking -->
-        <div id="view-status" class="hidden">
-            <!-- ค้นหาสถานะตัวเอง -->
-            <div class="bg-white rounded-lg shadow-sm p-6 mb-8 text-center max-w-2xl mx-auto">
-                <h3 class="text-xl font-bold mb-4">ตรวจสอบสถานะรายบุคคล</h3>
-                <div class="flex gap-2">
-                    <input type="text" id="searchId" placeholder="กรอกรหัสประจำตัวนักเรียน..." class="flex-1 border p-3 rounded-md">
-                    <button onclick="checkStatus()" class="bg-gray-800 text-white px-6 py-3 rounded-md font-bold hover:bg-gray-900">ค้นหา</button>
+        <!-- View: Vote -->
+        <div id="view-vote" class="hidden max-w-2xl mx-auto">
+            <div class="bg-white rounded-xl shadow-sm p-6 md:p-10 border border-gray-100">
+                <h2 class="text-2xl font-bold text-center mb-6 text-[#164e63]">ลงคะแนนโหวตเลือกผู้นำ</h2>
+                <div class="bg-yellow-50 p-4 rounded-md mb-6 border border-yellow-200 text-sm text-gray-700 text-center">
+                    นศท. 1 คน สามารถลงคะแนนโหวตได้เพียง 1 ครั้งเท่านั้น<br>กรุณาตรวจสอบให้แน่ใจก่อนกดยืนยัน
                 </div>
-                <div id="personalResult" class="mt-4 hidden p-4 rounded-md border text-left"></div>
-            </div>
 
-            <!-- Dashboard Ranking -->
-            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="mb-6 border-b pb-6">
+                    <label class="block font-bold mb-2">ยืนยันตัวตนผู้โหวต (รหัสนักเรียนของคุณ)</label>
+                    <input type="text" id="voterId" placeholder="กรอกรหัสของคุณ..." class="w-full border p-3 rounded-md">
+                </div>
+
+                <form id="voteForm" onsubmit="submitVote(event)" class="space-y-4">
+                    <div>
+                        <label class="block font-bold mb-1 text-red-800">โหวต: หัวหน้ากองพัน</label>
+                        <select id="voteBat" required class="w-full border p-3 rounded-md bg-gray-50"><option value="">-- เลือกผู้สมัคร --</option></select>
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1 text-green-800">โหวต: หัวหน้ากองร้อย</label>
+                        <select id="voteComp" required class="w-full border p-3 rounded-md bg-gray-50"><option value="">-- เลือกผู้สมัคร --</option></select>
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1 text-blue-800">โหวต: หัวหน้าหมวด</label>
+                        <select id="votePlat" required class="w-full border p-3 rounded-md bg-gray-50"><option value="">-- เลือกผู้สมัคร --</option></select>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-md font-bold text-lg shadow-md mt-4 transition">ส่งผลโหวต</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- View: Status -->
+        <div id="view-status" class="hidden">
+            <div class="bg-white rounded-xl shadow-sm p-6">
                 <div class="flex justify-between items-center mb-6 border-b pb-4">
-                    <h2 class="text-2xl font-bold text-green-800">แดชบอร์ดผลการคัดเลือก (Top Ranking)</h2>
-                    <button onclick="loadDashboard()" class="text-sm bg-green-100 text-green-800 px-3 py-1 rounded hover:bg-green-200">รีเฟรชข้อมูล</button>
+                    <h2 class="text-2xl font-bold text-[#164e63]">แดชบอร์ดคะแนน (Top Ranking)</h2>
+                    <button onclick="fetchInitialData()" class="text-sm bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 shadow-sm">รีเฟรชข้อมูล</button>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm text-left">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                        <thead class="bg-gray-100 text-gray-700 uppercase">
                             <tr>
                                 <th class="px-4 py-3">อันดับ</th>
                                 <th class="px-4 py-3">ชื่อ - นามสกุล</th>
-                                <th class="px-4 py-3">ชั้นปี</th>
-                                <th class="px-4 py-3">สถานะปัจจุบัน</th>
-                                <th class="px-4 py-3">คะแนนรวม</th>
+                                <th class="px-4 py-3">สถานะ</th>
+                                <th class="px-4 py-3">ปฏิบัติ(40)</th>
+                                <th class="px-4 py-3">สัมภาษณ์(20)</th>
+                                <th class="px-4 py-3">คะแนนโหวตที่แอดมินให้(40)</th>
+                                <th class="px-4 py-3 bg-gray-200">รวม</th>
                             </tr>
                         </thead>
-                        <tbody id="dashboardTable">
-                            <tr><td colspan="5" class="text-center py-4 text-gray-500">กำลังโหลดข้อมูล...</td></tr>
-                        </tbody>
+                        <tbody id="dashboardTable"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- View 4: Admin (Hidden by default) -->
-        <div id="view-admin" class="hidden bg-white rounded-lg shadow p-6">
-            <h2 class="text-2xl font-bold text-red-700 mb-4">ระบบจัดการและประเมินผล (Admin Only)</h2>
+        <!-- View: Admin (Hidden by default) -->
+        <div id="view-admin" class="hidden bg-white rounded-xl shadow p-6 border-t-4 border-red-700">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-red-700">ระบบจัดการผู้สมัคร (Admin Only)</h2>
+                <span class="text-sm bg-blue-100 text-blue-800 px-3 py-1 rounded font-bold">ข้อมูลโหวตดิบ (โหวตกองพัน/กองร้อย/หมวด) จะแสดงในชีต Data</span>
+            </div>
             <div class="overflow-x-auto">
                 <table class="min-w-full text-sm text-left border">
                     <thead class="bg-gray-800 text-white">
                         <tr>
-                            <th class="px-4 py-3">รหัส/ชื่อ</th>
-                            <th class="px-4 py-3">สั่งแถว(40)</th>
-                            <th class="px-4 py-3">สัมภาษณ์(20)</th>
-                            <th class="px-4 py-3">โหวต(40)</th>
-                            <th class="px-4 py-3">สถานะ</th>
-                            <th class="px-4 py-3">จัดการ</th>
+                            <th class="px-4 py-3">ชื่อ (รหัส)</th>
+                            <th class="px-2 py-3 text-center">สั่งแถว(40)</th>
+                            <th class="px-2 py-3 text-center">สัมภาษณ์(20)</th>
+                            <th class="px-2 py-3 text-center">แปลงคะแนนโหวต(40)</th>
+                            <th class="px-4 py-3 text-center">สถานะ</th>
+                            <th class="px-4 py-3 text-center">จัดการ</th>
                         </tr>
                     </thead>
                     <tbody id="adminTable"></tbody>
@@ -198,199 +202,242 @@
             </div>
         </div>
 
-        <!-- Print Application Form -->
-        <div id="printArea" class="hidden print-only print-container mt-8">
-            <div class="text-center mb-6">
-                <h2 class="text-2xl font-bold">ใบสมัครหัวหน้านักศึกษาวิชาทหาร</h2>
-                <p>ประจำปีการศึกษา 2567</p>
+        <!-- Print Area (Visible only when print() is called) -->
+        <div id="printArea" class="hidden bg-white p-8">
+            <div class="flex items-center justify-center mb-6 border-b-2 border-black pb-4">
+                <!-- Formal Logo for Print -->
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                <div class="ml-4 text-center">
+                    <h2 class="text-2xl font-bold">ใบสมัครคัดเลือกหัวหน้านักศึกษาวิชาทหาร</h2>
+                    <p class="text-lg">ประจำปีการศึกษา 2567</p>
+                </div>
             </div>
-            <div style="position: absolute; top: 20px; right: 20px; width: 3cm; height: 4cm; border: 1px solid #000; text-align: center; line-height: 4cm;">ติดรูปถ่าย</div>
-            <div class="mb-4 mt-12">
-                <p class="mb-2"><b>ชื่อ-สกุล:</b> <span id="p-name" class="border-b border-dotted border-gray-500 px-4"></span></p>
-                <p class="mb-2"><b>รหัสนักเรียน:</b> <span id="p-id" class="border-b border-dotted border-gray-500 px-4"></span> <b>ชั้นปีที่:</b> <span id="p-year" class="border-b border-dotted border-gray-500 px-4"></span></p>
-                <p class="mb-2"><b>ประสบการณ์:</b> <span id="p-exp" class="border-b border-dotted border-gray-500 px-4"></span></p>
-                <p class="mb-2"><b>วิสัยทัศน์:</b> <span id="p-vis" class="border-b border-dotted border-gray-500 px-4"></span></p>
+            
+            <div class="flex gap-6 mt-8">
+                <div class="flex-1">
+                    <p class="mb-4 text-lg"><b>ชื่อ - สกุล:</b> <span id="p-name" class="border-b border-dotted border-gray-600 px-2"></span></p>
+                    <p class="mb-4 text-lg"><b>รหัสประจำตัว:</b> <span id="p-id" class="border-b border-dotted border-gray-600 px-2"></span> &nbsp;&nbsp; <b>ชั้นปีที่:</b> <span class="border-b border-dotted border-gray-600 px-2">2</span></p>
+                    <p class="mb-2 font-bold mt-6">ประสบการณ์:</p>
+                    <div id="p-exp" class="min-h-[60px] border border-gray-300 p-2 text-sm mb-4"></div>
+                    <p class="mb-2 font-bold">วิสัยทัศน์:</p>
+                    <div id="p-vis" class="min-h-[80px] border border-gray-300 p-2 text-sm"></div>
+                </div>
+                <div class="w-[3.5cm] flex flex-col items-center">
+                    <img id="p-photo" src="" class="w-[3.5cm] h-[4.5cm] object-cover border-2 border-black p-1" alt="รูปถ่าย">
+                </div>
             </div>
-            <div class="mt-16 text-right">
-                <p>ลงชื่อ......................................................ผู้สมัคร</p>
-                <p class="mt-2">(......................................................)</p>
-            </div>
-            <div class="mt-8 border-t pt-4 text-center">
-                <p><b>สำหรับผกท.</b></p>
-                <p class="mt-8">ลงชื่อ......................................................ผู้รับมอบ</p>
+
+            <div class="mt-20 flex justify-between px-10">
+                <div class="text-center">
+                    <p>ลงชื่อ.........................................................</p>
+                    <p class="mt-2">(.........................................................)</p>
+                    <p class="mt-1">ผู้ยื่นใบสมัคร</p>
+                </div>
+                <div class="text-center">
+                    <p>ลงชื่อ.........................................................</p>
+                    <p class="mt-2">(.........................................................)</p>
+                    <p class="mt-1">ผู้บังคับบัญชา / ผู้รับมอบ</p>
+                </div>
             </div>
         </div>
-
     </main>
 
     <script>
-        // === นำ URL ของ Web App จาก Google Apps Script มาใส่ตรงนี้เหมือนเดิม ===
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx5ecrFQzoVrXSZJgMNkP_eJvpVNFcUmpI_d1IUJo5eC-O6EK0nFXLQLHbzeO4LAPZD/exec'; 
-        let globalData = [];
+        let DB = { candidates: [], students: [], votes: [] };
+        let activeApplyingStudent = null;
+
+        // --- UI Functions ---
+        function showLoading(show) {
+            document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
+        }
+
+        function showToast(msg, type='success') {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.className = `fixed bottom-5 right-5 px-6 py-3 rounded shadow-lg border-l-4 text-white z-[1050] transition-all duration-300 ${type === 'error' ? 'bg-red-600 border-red-900' : 'bg-green-600 border-green-900'}`;
+            setTimeout(() => { toast.style.right = '-300px'; }, 4000);
+        }
 
         function switchTab(tabId) {
-            ['info', 'apply', 'status', 'admin'].forEach(id => {
+            ['info', 'apply', 'vote', 'status', 'admin'].forEach(id => {
                 document.getElementById(`view-${id}`).classList.add('hidden');
-                if(document.getElementById(`tab-${id}`)) {
-                    document.getElementById(`tab-${id}`).classList.remove('nav-active', 'text-gray-500');
-                    if(tabId === id) {
-                        document.getElementById(`tab-${id}`).classList.add('nav-active');
-                    } else {
-                        document.getElementById(`tab-${id}`).classList.add('text-gray-500');
-                    }
+                let tab = document.getElementById(`tab-${id}`);
+                if(tab) {
+                    tab.classList.remove('nav-active', 'text-gray-500');
+                    tabId === id ? tab.classList.add('nav-active') : tab.classList.add('text-gray-500');
                 }
             });
             document.getElementById(`view-${tabId}`).classList.remove('hidden');
-            if(tabId === 'status') loadDashboard();
+            if(tabId === 'vote') populateVoteDropdowns();
         }
 
-        function resizeImageAndGetBase64(file, callback) {
-            if(!file) return callback("");
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 300;
-                    const scaleSize = MAX_WIDTH / img.width;
-                    canvas.width = MAX_WIDTH;
-                    canvas.height = img.height * scaleSize;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    callback(canvas.toDataURL('image/jpeg', 0.6));
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function submitForm(e) {
-            e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            btn.innerText = "กำลังประมวลผล..."; btn.disabled = true;
-
-            const photoFile = document.getElementById('fphoto').files[0];
-            resizeImageAndGetBase64(photoFile, (base64Img) => {
-                const payload = {
-                    action: 'apply',
-                    name: document.getElementById('fname').value,
-                    studentId: document.getElementById('fstudentId').value,
-                    year: document.getElementById('fyear').value,
-                    experience: document.getElementById('fexp').value,
-                    vision: document.getElementById('fvision').value,
-                    photo: base64Img
-                };
-
-                fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                }).then(res => res.json()).then(data => {
-                    alert("ส่งใบสมัครเรียบร้อยแล้ว! กรุณาพิมพ์ใบสมัครในขั้นตอนต่อไป");
-                    document.getElementById('p-name').innerText = payload.name;
-                    document.getElementById('p-id').innerText = payload.studentId;
-                    document.getElementById('p-year').innerText = payload.year;
-                    document.getElementById('p-exp').innerText = payload.experience;
-                    document.getElementById('p-vis').innerText = payload.vision;
-                    
-                    window.print();
-                    
-                    document.getElementById('applyForm').reset();
-                    switchTab('status');
-                }).catch(err => {
-                    alert("เกิดข้อผิดพลาด กรุณาลองใหม่");
-                }).finally(() => {
-                    btn.innerText = "ยื่นใบสมัคร"; btn.disabled = false;
-                });
-            });
-        }
-
-        function loadDashboard() {
+        // --- Data Fetching ---
+        function fetchInitialData() {
+            showLoading(true);
             fetch(APPS_SCRIPT_URL)
                 .then(res => res.json())
                 .then(res => {
-                    globalData = res.data;
-                    let sortedData = [...globalData].sort((a,b) => b.TotalScore - a.TotalScore);
-                    let tbody = document.getElementById('dashboardTable');
-                    tbody.innerHTML = '';
-                    
-                    if(sortedData.length === 0) tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4">ยังไม่มีผู้สมัคร</td></tr>`;
-                    
-                    sortedData.forEach((row, index) => {
-                        let statusColor = "bg-gray-200 text-gray-800";
-                        if(row.Status === "ผ่านการคัดเลือก") statusColor = "bg-green-100 text-green-800";
-                        if(row.Status === "ไม่ผ่าน") statusColor = "bg-red-100 text-red-800";
-                        if(row.Status === "สัมภาษณ์") statusColor = "bg-blue-100 text-blue-800";
-
-                        tbody.innerHTML += `
-                            <tr class="border-b">
-                                <td class="px-4 py-3 font-bold ${index < 3 ? 'text-yellow-600' : ''}">${index + 1}</td>
-                                <td class="px-4 py-3">${row.Name}</td>
-                                <td class="px-4 py-3">${row.Year}</td>
-                                <td class="px-4 py-3"><span class="px-2 py-1 rounded text-xs font-medium ${statusColor}">${row.Status}</span></td>
-                                <td class="px-4 py-3 font-bold">${row.TotalScore || 0}</td>
-                            </tr>
-                        `;
-                    });
+                    DB = res;
+                    renderDashboard();
+                    if(document.getElementById('view-admin').classList.contains('hidden') === false) {
+                        renderAdminTable();
+                    }
+                    showLoading(false);
+                }).catch(err => {
+                    showLoading(false);
+                    showToast('ดึงข้อมูลล้มเหลว กรุณารีเฟรชหน้าเว็บ', 'error');
                 });
         }
 
-        function checkStatus() {
-            const sid = document.getElementById('searchId').value;
-            const resDiv = document.getElementById('personalResult');
-            if(!sid) return;
+        // --- Apply Logic ---
+        function fetchStudentForApply() {
+            const sid = document.getElementById('findStudentId').value.trim();
+            if(!sid) return showToast('กรุณากรอกรหัสนักเรียน', 'error');
             
-            const user = globalData.find(u => u.StudentID == sid);
-            resDiv.classList.remove('hidden');
-            if(user) {
-                resDiv.className = "mt-4 p-4 rounded-md border text-left bg-green-50 border-green-200";
-                resDiv.innerHTML = `
-                    <h4 class="font-bold text-lg mb-2">ข้อมูลผู้สมัคร: ${user.Name}</h4>
-                    <p><b>สถานะปัจจุบัน:</b> ${user.Status}</p>
-                    <p><b>คะแนนรวม:</b> ${user.TotalScore}/100</p>
-                    <div class="mt-2 text-sm text-gray-600 border-t pt-2">
-                        ปฏิบัติ: ${user.ScoreCommand} | สัมภาษณ์: ${user.ScoreInterview} | โหวต: ${user.ScoreVote}
-                    </div>
-                `;
+            // ตรวจสอบว่าสมัครไปแล้วหรือยัง
+            const alreadyApplied = DB.candidates.find(c => c.StudentID == sid);
+            if(alreadyApplied) return showToast('รหัสนี้ได้ทำการสมัครไปแล้ว!', 'error');
+
+            const student = DB.students.find(s => s.StudentID == sid);
+            if(student) {
+                activeApplyingStudent = student;
+                document.getElementById('applyForm').classList.remove('hidden');
+                document.getElementById('displayName').innerText = student.Name;
+                document.getElementById('displayId').innerText = student.StudentID;
+                document.getElementById('displayPhoto').src = student.PhotoURL;
+                showToast('พบข้อมูล! กรุณากรอกรายละเอียดต่อ');
             } else {
-                resDiv.className = "mt-4 p-4 rounded-md border text-left bg-red-50 border-red-200";
-                resDiv.innerHTML = `<p class="text-red-700">ไม่พบข้อมูลของรหัสประจำตัว ${sid}</p>`;
+                document.getElementById('applyForm').classList.add('hidden');
+                showToast('ไม่พบข้อมูลนักเรียนปี 2 ในระบบ', 'error');
             }
         }
 
+        function submitApplication(e) {
+            e.preventDefault();
+            if(!activeApplyingStudent) return;
+            
+            showLoading(true);
+            const payload = {
+                action: 'apply',
+                studentId: activeApplyingStudent.StudentID,
+                name: activeApplyingStudent.Name,
+                photo: activeApplyingStudent.PhotoURL,
+                experience: document.getElementById('fexp').value,
+                vision: document.getElementById('fvision').value
+            };
+
+            fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
+                .then(res => res.json())
+                .then(data => {
+                    showToast(data.message);
+                    document.getElementById('applyForm').reset();
+                    document.getElementById('applyForm').classList.add('hidden');
+                    document.getElementById('findStudentId').value = '';
+                    fetchInitialData(); // โหลดใหม่
+                    switchTab('status');
+                }).finally(() => showLoading(false));
+        }
+
+        // --- Vote Logic ---
+        function populateVoteDropdowns() {
+            let opts = `<option value="">-- เลือกผู้สมัคร --</option>`;
+            DB.candidates.forEach(c => {
+                opts += `<option value="${c.Name}">${c.Name} (รหัส: ${c.StudentID})</option>`;
+            });
+            document.getElementById('voteBat').innerHTML = opts;
+            document.getElementById('voteComp').innerHTML = opts;
+            document.getElementById('votePlat').innerHTML = opts;
+        }
+
+        function submitVote(e) {
+            e.preventDefault();
+            const voterId = document.getElementById('voterId').value.trim();
+            if(!voterId) return showToast('กรุณากรอกรหัสประจำตัวของคุณ', 'error');
+
+            showLoading(true);
+            const payload = {
+                action: 'vote',
+                voterId: voterId,
+                battalion: document.getElementById('voteBat').value,
+                company: document.getElementById('voteComp').value,
+                platoon: document.getElementById('votePlat').value
+            };
+
+            fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
+                .then(res => res.json())
+                .then(data => {
+                    showToast(data.message, data.status);
+                    if(data.status === 'success') {
+                        document.getElementById('voteForm').reset();
+                        document.getElementById('voterId').value = '';
+                        fetchInitialData();
+                    }
+                }).finally(() => showLoading(false));
+        }
+
+        // --- Status Dashboard ---
+        function renderDashboard() {
+            let sorted = [...DB.candidates].sort((a,b) => b.TotalScore - a.TotalScore);
+            let tbody = document.getElementById('dashboardTable');
+            tbody.innerHTML = '';
+            
+            if(sorted.length === 0) return tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4">ยังไม่มีผู้สมัคร</td></tr>`;
+            
+            sorted.forEach((row, idx) => {
+                let sColor = row.Status === "ผ่านการคัดเลือก" ? "bg-green-100 text-green-800" : (row.Status === "ไม่ผ่าน" ? "bg-red-100 text-red-800" : "bg-gray-200 text-gray-800");
+                tbody.innerHTML += `
+                    <tr class="border-b bg-white">
+                        <td class="px-4 py-3 font-bold">${idx + 1}</td>
+                        <td class="px-4 py-3 flex items-center gap-3">
+                            <img src="${row.PhotoURL}" class="w-8 h-8 rounded-full object-cover bg-gray-200">
+                            ${row.Name}
+                        </td>
+                        <td class="px-4 py-3"><span class="px-2 py-1 rounded text-xs ${sColor}">${row.Status}</span></td>
+                        <td class="px-4 py-3">${row.ScoreCommand}</td>
+                        <td class="px-4 py-3">${row.ScoreInterview}</td>
+                        <td class="px-4 py-3 text-blue-700">${row.ScoreVote}</td>
+                        <td class="px-4 py-3 font-bold bg-gray-50">${row.TotalScore || 0}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // --- Admin Logic ---
         function showAdminPrompt() {
-            const pass = prompt("กรุณากรอกรหัสผ่านผู้ดูแลระบบ:");
+            const pass = prompt("กรุณากรอกรหัสผ่าน (admin1234):");
             if(pass === "admin1234") {
                 switchTab('admin');
                 renderAdminTable();
             } else if(pass) {
-                alert("รหัสผ่านไม่ถูกต้อง");
+                showToast("รหัสผ่านไม่ถูกต้อง", "error");
             }
         }
 
         function renderAdminTable() {
             let tbody = document.getElementById('adminTable');
             tbody.innerHTML = '';
-            globalData.forEach((row, i) => {
+            DB.candidates.forEach((row, i) => {
                 tbody.innerHTML += `
-                    <tr class="border-b bg-white">
+                    <tr class="border-b bg-white hover:bg-gray-50">
                         <td class="px-4 py-2">
-                            <div class="font-bold">${row.Name}</div>
+                            <div class="font-bold text-gray-800">${row.Name}</div>
                             <div class="text-xs text-gray-500">${row.StudentID}</div>
                         </td>
-                        <td class="px-2 py-2"><input type="number" id="s2_${i}" value="${row.ScoreCommand}" class="w-16 border rounded p-1" placeholder="40"></td>
-                        <td class="px-2 py-2"><input type="number" id="s3_${i}" value="${row.ScoreInterview}" class="w-16 border rounded p-1" placeholder="20"></td>
-                        <td class="px-2 py-2"><input type="number" id="s4_${i}" value="${row.ScoreVote}" class="w-16 border rounded p-1" placeholder="40"></td>
-                        <td class="px-2 py-2">
-                            <select id="stat_${i}" class="border rounded p-1 text-sm">
+                        <td class="px-2 py-2 text-center"><input type="number" id="s1_${i}" value="${row.ScoreCommand}" class="w-16 border rounded p-1 text-center"></td>
+                        <td class="px-2 py-2 text-center"><input type="number" id="s2_${i}" value="${row.ScoreInterview}" class="w-16 border rounded p-1 text-center"></td>
+                        <td class="px-2 py-2 text-center"><input type="number" id="s3_${i}" value="${row.ScoreVote}" class="w-16 border rounded p-1 text-center bg-blue-50"></td>
+                        <td class="px-2 py-2 text-center">
+                            <select id="stat_${i}" class="border rounded p-1 text-sm bg-gray-50">
                                 <option ${row.Status=='รอตรวจสอบ'?'selected':''}>รอตรวจสอบ</option>
                                 <option ${row.Status=='สัมภาษณ์'?'selected':''}>สัมภาษณ์</option>
                                 <option ${row.Status=='ผ่านการคัดเลือก'?'selected':''}>ผ่านการคัดเลือก</option>
-                                <option ${row.Status=='ตัวสำรอง'?'selected':''}>ตัวสำรอง</option>
                                 <option ${row.Status=='ไม่ผ่าน'?'selected':''}>ไม่ผ่าน</option>
                             </select>
                         </td>
-                        <td class="px-4 py-2">
+                        <td class="px-4 py-2 text-center space-x-1">
                             <button onclick="saveAdminData('${row.StudentID}', ${i})" class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">บันทึก</button>
+                            <button onclick="printAdminCard('${row.StudentID}')" class="bg-gray-700 text-white px-3 py-1 rounded text-sm hover:bg-gray-900">พิมพ์เอกสาร</button>
                         </td>
                     </tr>
                 `;
@@ -398,26 +445,41 @@
         }
 
         function saveAdminData(studentId, i) {
+            showLoading(true);
             const payload = {
                 action: 'evaluate',
                 studentId: studentId,
-                scoreForm: 0, // บังคับให้เป็น 0 เสมอเพื่อให้รวม 100 พอดี
-                scoreCommand: parseInt(document.getElementById(`s2_${i}`).value) || 0,
-                scoreInterview: parseInt(document.getElementById(`s3_${i}`).value) || 0,
-                scoreVote: parseInt(document.getElementById(`s4_${i}`).value) || 0,
+                scoreCommand: parseInt(document.getElementById(`s1_${i}`).value) || 0,
+                scoreInterview: parseInt(document.getElementById(`s2_${i}`).value) || 0,
+                scoreVote: parseInt(document.getElementById(`s3_${i}`).value) || 0,
                 status: document.getElementById(`stat_${i}`).value
             };
 
-            fetch(APPS_SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            }).then(res => res.json()).then(data => {
-                alert("อัปเดตข้อมูลสำเร็จ!");
-                loadDashboard(); 
-            });
+            fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
+                .then(res => res.json())
+                .then(data => {
+                    showToast(data.message);
+                    fetchInitialData(); 
+                }).finally(() => showLoading(false));
         }
 
-        window.onload = loadDashboard;
+        function printAdminCard(studentId) {
+            const candidate = DB.candidates.find(c => c.StudentID == studentId);
+            if(!candidate) return;
+            
+            // Map data to print layout
+            document.getElementById('p-name').innerText = candidate.Name;
+            document.getElementById('p-id').innerText = candidate.StudentID;
+            document.getElementById('p-exp').innerText = candidate.Experience;
+            document.getElementById('p-vis').innerText = candidate.Vision;
+            document.getElementById('p-photo').src = candidate.PhotoURL;
+            
+            // Trigger Browser Print
+            window.print();
+        }
+
+        // Initialize on Load
+        window.onload = fetchInitialData;
     </script>
 </body>
 </html>
