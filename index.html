@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบรับสมัครหัวหน้า นศท.</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-header bg-success text-white">
+            <h3 class="mb-0 text-center">ฟอร์มสมัครเป็นหัวหน้า นศท.</h3>
+        </div>
+        <div class="card-body">
+            <form id="applicationForm">
+                <div class="mb-3">
+                    <label class="form-label">ชื่อ-นามสกุล</label>
+                    <input type="text" class="form-control" id="name" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">รหัสประจำตัวนักเรียน</label>
+                    <input type="text" class="form-control" id="studentId" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">ชั้นปี</label>
+                    <select class="form-select" id="year" required>
+                        <option value="">เลือกชั้นปี</option>
+                        <option value="ปี 2">ปี 2</option>
+                        
+                        
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">ประสบการณ์ (เคยเป็นหัวหน้าห้อง, สภานักเรียน ฯลฯ)</label>
+                    <textarea class="form-control" id="experience" rows="2" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">เหตุผลที่อยากเป็นหัวหน้า และวิธีรับมือหากเพื่อนไม่ฟังคำสั่ง</label>
+                    <textarea class="form-control" id="vision" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-success w-100" id="submitBtn">ส่งใบสมัคร</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // นำ URL ที่คัดลอกจาก Google Apps Script มาใส่ในเครื่องหมายคำพูดด้านล่าง
+    const API_URL = 'https://script.google.com/macros/s/AKfycbx5ecrFQzoVrXSZJgMNkP_eJvpVNFcUmpI_d1IUJo5eC-O6EK0nFXLQLHbzeO4LAPZD/exec';
+
+    document.getElementById('applicationForm').addEventListener('submit', function(e) {
+        e.preventDefault(); // ป้องกันการรีเฟรชหน้าเว็บ
+        
+        // เปลี่ยนปุ่มเป็นสถานะกำลังโหลด
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.innerHTML = 'กำลังส่งข้อมูล...';
+        submitBtn.disabled = true;
+
+        // รวบรวมข้อมูลจากฟอร์ม
+        const data = {
+            name: document.getElementById('name').value,
+            studentId: document.getElementById('studentId').value,
+            year: document.getElementById('year').value,
+            experience: document.getElementById('experience').value,
+            vision: document.getElementById('vision').value
+        };
+
+        // ส่งข้อมูลไปยัง API
+        fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            alert('ส่งใบสมัครเรียบร้อยแล้ว! ขอบคุณสำหรับความตั้งใจครับ');
+            document.getElementById('applicationForm').reset(); // ล้างฟอร์ม
+            submitBtn.innerHTML = 'ส่งใบสมัคร';
+            submitBtn.disabled = false;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('เกิดข้อผิดพลาดในการส่งข้อมูล กรุณาลองใหม่อีกครั้ง');
+            submitBtn.innerHTML = 'ส่งใบสมัคร';
+            submitBtn.disabled = false;
+        });
+    });
+</script>
+
+</body>
+</html>
